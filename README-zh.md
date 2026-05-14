@@ -1,3 +1,7 @@
+<p align="right">
+  <a href="./README.md">English</a> | <a href="./README-zh.md">简体中文</a>
+</p>
+
 # Analyze AI Papers
 
 > 📘 一个可同时用于 Codex 与 Claude Code 的论文分析工作流。
