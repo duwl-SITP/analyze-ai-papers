@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Paper Analyst"
-  short_description: "Deep technical analysis of AI research papers"
-  default_prompt: "Use $analyze-ai-papers to read this paper and produce a structured technical analysis covering method, training, experiments, and limitations."
+  short_description: "Analyze AI papers with optional figure/table extraction support"
+  default_prompt: "Use $analyze-ai-papers with output_language set to the requested language or the user's primary language by default. Read this paper PDF and produce a structured, detailed technical analysis in a formal written style, covering method, equations, experimental setup, experiments, and limitations. Include necessary experimental or ablation visualizations when they materially support interpretation. Only extract figures or tables when the user explicitly asks for them or when visual content is necessary to explain architectures, modules, pipelines, qualitative examples, or key tables."

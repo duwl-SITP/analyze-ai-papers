@@ -1,3 +1,5 @@
+<!-- Translate all headings into output_language while preserving this section order. Keep paper titles, citations, model names, author names, datasets, and metric abbreviations in original form when appropriate. Default to detailed technical analysis in a formal written register. Put formulas mainly in Technical Details or Experimental Setup, and put images mainly in Architecture And Pipeline or Experimental Results. -->
+
 # Paper Information
 
 - Title:
@@ -38,6 +40,7 @@
 - Representation choices:
 - Supervision signals:
 - Training-only versus inference-time components:
+- Key equations or scoring rules:
 
 # Architecture And Pipeline
 
@@ -46,13 +49,7 @@
 3. Fusion / reasoning / decoding:
 4. Prediction head or generation path:
 5. Inference flow:
-
-# Loss Functions And Optimization
-
-- Objective terms:
-- Meaning of each term:
-- Optimization schedule:
-- Important implementation details:
+6. Relevant figures or visual evidence to reference:
 
 # Experimental Setup
 
@@ -61,18 +58,25 @@
 - Baselines:
 - Pretraining / initialization:
 - Compute or resolution notes:
+- Loss functions and objective terms:
+- Meaning of each loss or objective term:
+- Optimization schedule and implementation details:
 
 # Experimental Results
 
 - Main quantitative results:
 - Where gains are strongest:
 - Fairness caveats:
+- Relevant tables or qualitative figures to reference:
+- Explanation of what each referenced visualization demonstrates:
 
 # Ablation Studies
 
 - Key ablations:
 - What each ablation isolates:
 - What the ablations do and do not prove:
+- Supporting ablation figures or tables to reference:
+- Explanation of what each referenced ablation visualization demonstrates:
 
 # Strengths
 
@@ -96,19 +100,14 @@
 
 # Related Work And References
 
-## Important References
+- Related-work positioning:
+- Main comparison axis:
+- Most relevant prior methods discussed:
+- How the current paper differs from them:
 
-| Reference | Role | Why It Matters Here | How The Current Paper Differs | Confidence |
-| --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+## References
 
-## Foundational Works
-
-- 
-
-## Closest Prior Works
-
-- 
+[1]
 
 # One-Sentence Summary
 

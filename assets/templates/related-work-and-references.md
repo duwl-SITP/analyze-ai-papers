@@ -1,22 +1,16 @@
+<!-- Translate all headings into output_language while preserving this section order. Keep paper titles, citations, model names, and author names in original form when appropriate. Write the analysis as prose or bullets, then end with a numbered reference list in normal citation style. -->
+
 # Related Work Positioning
 
 - Task family:
 - Main comparison axis:
 - Claimed gap in prior work:
+- Most relevant prior methods discussed:
+- How the current paper is positioned against them:
 
-# Important References
+# References
 
-| Reference | Role | Why It Matters Here | How The Current Paper Differs | Confidence |
-| --- | --- | --- | --- | --- |
-|  |  |  |  |  |
-
-# Foundational Works
-
-- 
-
-# Most Related Prior Works
-
-- 
+[1]
 
 # Architectural Or Methodological Lineage
 

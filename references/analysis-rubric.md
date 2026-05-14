@@ -131,6 +131,12 @@ When reporting results, state whether gains are:
 - stronger in large models than small ones
 - dependent on scale, data, or compute
 
+When the paper provides qualitative figures, error cases, retrieval examples, confusion visualizations, attention maps, or ablation plots that materially affect interpretation:
+
+- include the necessary visualization in the report or refer to it explicitly
+- explain what the visualization evidences
+- distinguish illustrative qualitative evidence from stronger quantitative evidence
+
 ## Complexity and efficiency
 
 Look beyond parameter count:
