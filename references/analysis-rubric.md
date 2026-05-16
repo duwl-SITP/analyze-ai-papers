@@ -2,6 +2,8 @@
 
 Use this file as the detailed checklist behind the default report.
 
+This file is the canonical detailed review checklist for the final report. It evaluates analytical completeness and evidence quality; it does not replace the separate language, math-formatting, readability, or template files.
+
 ## Contents
 
 - Evidence boundary
@@ -53,6 +55,15 @@ Explain the method from coarse to fine:
 3. Representations and interfaces between modules
 4. Training-only components versus inference-time components
 
+For `Technical Details`, explain each key component with explicit before-and-after logic:
+
+- What problem, bottleneck, or failure mode motivates this component?
+- What mechanism, representation change, or objective does the paper introduce?
+- What downstream behavior, constraint, or empirical effect is this supposed to cause?
+- Which later stage of the pipeline depends on this change?
+- Does each paragraph avoid abrupt concept jumps by explaining the source and role of every newly introduced prompt, module, loss, variable, constraint, or representation?
+- If a paragraph moves from concept A to concept B, does it include a sentence explaining why B is the next step for solving or constraining A?
+
 Look for these failure-prone details:
 
 - hidden dependence on pretraining
@@ -69,6 +80,8 @@ For each important equation or training objective, answer:
 - Which terms are primary versus auxiliary?
 - Which terms operate on features, logits, boxes, masks, tokens, or generated outputs?
 - How does the objective reinforce the architectural claim?
+- What preceding concept makes this equation, loss, or constraint necessary?
+- What role does the equation play immediately after it is introduced?
 
 When the paper has several losses, identify whether the gain likely comes from:
 
@@ -191,3 +204,7 @@ Before finishing, check that the report:
 - covers both experiments and ablations
 - names important limitations
 - avoids generic praise
+- avoids abrupt concept jumps inside paragraphs
+- explains the source, relationship, and role the first time each important formula, prompt, loss, module, variable, or constraint appears
+- rewrites bare math-like fragments into `$...$` or `$$...$$` before finalizing
+- does not leave unwrapped TeX commands, `_` or `^` expressions, or arrow notation in plain prose

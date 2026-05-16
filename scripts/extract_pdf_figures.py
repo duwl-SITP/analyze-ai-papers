@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import re
+import shutil
 import statistics
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -76,23 +77,37 @@ class AssetRecord:
     anchor_text: str
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Extract figure/table crops from a PDF, save them into images/, and "
-            "write markdown with relative image links."
+            "Extract figure/table crops from a PDF, create one method-named "
+            "artifact folder, save images/ there, and write markdown with "
+            "relative image links."
         )
     )
     parser.add_argument("--pdf", required=True, help="Source PDF path.")
     parser.add_argument(
         "--out-dir",
         required=True,
-        help="Output directory. The script writes markdown plus images/ under this directory.",
+        help=(
+            "Parent output directory. The script creates one method-named artifact "
+            "folder under this directory and writes markdown plus images/ there."
+        ),
+    )
+    parser.add_argument(
+        "--method-name",
+        help=(
+            "Optional method or model name used for the artifact folder. "
+            "If omitted, the script falls back to the PDF filename stem."
+        ),
     )
     parser.add_argument(
         "--markdown-name",
         default="paper.md",
-        help="Markdown filename to write under --out-dir. Default: paper.md",
+        help=(
+            "Markdown filename only to write under the method folder. "
+            "Path components are not allowed. Default: paper.md"
+        ),
     )
     parser.add_argument(
         "--skeleton-markdown",
@@ -113,7 +128,15 @@ def parse_args() -> argparse.Namespace:
         default=8.0,
         help="Extra PDF-point margin around matched crop regions. Default: 8",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--force-regenerate",
+        action="store_true",
+        help=(
+            "Remove previously generated markdown and images for this method folder "
+            "before writing new extraction outputs."
+        ),
+    )
+    return parser.parse_args(argv)
 
 
 def require_dependencies() -> None:
@@ -136,6 +159,86 @@ def normalize_text(text: str) -> str:
     lowered = re.sub(r"\s+", " ", lowered)
     lowered = re.sub(r"[^a-z0-9 ]+", " ", lowered)
     return re.sub(r"\s+", " ", lowered).strip()
+
+
+def validate_artifact_name(text: str) -> str:
+    cleaned = text.strip()
+    if not cleaned:
+        raise SystemExit("Artifact folder name must not be empty.")
+    if cleaned in {".", ".."}:
+        raise SystemExit(
+            "Artifact folder name must not be '.' or '..'."
+        )
+    if "/" in cleaned or "\\" in cleaned:
+        raise SystemExit(
+            "Artifact folder name must not contain path separators."
+        )
+    if "\x00" in cleaned:
+        raise SystemExit(
+            "Artifact folder name must not contain NUL bytes."
+        )
+    return cleaned
+
+
+def validate_markdown_name(text: str) -> str:
+    cleaned = text.strip()
+    if not cleaned:
+        raise SystemExit("Markdown filename must not be empty.")
+    if cleaned in {".", ".."}:
+        raise SystemExit("Markdown filename must not be '.' or '..'.")
+    if "/" in cleaned or "\\" in cleaned:
+        raise SystemExit(
+            "Markdown filename must be a filename only and must not contain path separators."
+        )
+    if "\x00" in cleaned:
+        raise SystemExit("Markdown filename must not contain NUL bytes.")
+    return cleaned
+
+
+def resolve_method_dir_name(pdf_path: Path, method_name: str | None) -> str:
+    source_name = method_name if method_name is not None else pdf_path.stem
+    return validate_artifact_name(source_name)
+
+
+def ensure_no_case_conflict(base_out_dir: Path, method_dir_name: str) -> None:
+    if not base_out_dir.exists():
+        return
+    target_key = method_dir_name.casefold()
+    conflicts = sorted(
+        candidate.name
+        for candidate in base_out_dir.iterdir()
+        if candidate.is_dir()
+        and candidate.name.casefold() == target_key
+        and candidate.name != method_dir_name
+    )
+    if conflicts:
+        conflict_list = ", ".join(conflicts)
+        raise SystemExit(
+            "Conflicting artifact folders differ only by case: "
+            f"{conflict_list} vs {method_dir_name}. "
+            "Use one canonical folder name and remove or rename the conflicting directory."
+        )
+
+
+def prepare_method_dir(
+    base_out_dir: Path,
+    method_dir_name: str,
+    markdown_name: str,
+    force_regenerate: bool,
+) -> tuple[Path, Path]:
+    ensure_no_case_conflict(base_out_dir, method_dir_name)
+    method_dir = base_out_dir / method_dir_name
+    markdown_path = method_dir / markdown_name
+    images_dir = method_dir / "images"
+
+    if force_regenerate and method_dir.exists():
+        for stale_markdown in method_dir.glob("*.md"):
+            stale_markdown.unlink()
+        if images_dir.exists():
+            shutil.rmtree(images_dir)
+
+    method_dir.mkdir(parents=True, exist_ok=True)
+    return method_dir, markdown_path
 
 
 def block_text_from_dict(block: dict) -> tuple[str, float, bool]:
@@ -949,9 +1052,15 @@ def main() -> None:
     require_dependencies()
 
     pdf_path = Path(args.pdf).expanduser().resolve()
-    out_dir = Path(args.out_dir).expanduser().resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    markdown_path = out_dir / args.markdown_name
+    base_out_dir = Path(args.out_dir).expanduser().resolve()
+    markdown_name = validate_markdown_name(args.markdown_name)
+    method_dir_name = resolve_method_dir_name(pdf_path, args.method_name)
+    out_dir, markdown_path = prepare_method_dir(
+        base_out_dir=base_out_dir,
+        method_dir_name=method_dir_name,
+        markdown_name=markdown_name,
+        force_regenerate=args.force_regenerate,
+    )
 
     doc = fitz.open(pdf_path)
     try:
@@ -977,9 +1086,13 @@ def main() -> None:
     finally:
         doc.close()
 
+    run_mode = f"{mode} mode"
+    if args.force_regenerate:
+        run_mode += ", fresh regenerate"
+
     print(
-        f"Wrote {len(assets)} extracted assets via {mode} mode to "
-        f"{markdown_path} and {out_dir / 'images'}"
+        f"Wrote {len(assets)} extracted assets via {run_mode} into "
+        f"{out_dir} ({markdown_path}, {out_dir / 'images'})"
     )
 
 

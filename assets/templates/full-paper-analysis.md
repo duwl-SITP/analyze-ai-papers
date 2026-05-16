@@ -1,4 +1,4 @@
-<!-- Translate all headings into output_language while preserving this section order. Keep paper titles, citations, model names, author names, datasets, and metric abbreviations in original form when appropriate. Default to detailed technical analysis in a formal written register. Put formulas mainly in Technical Details or Experimental Setup, and put images mainly in Architecture And Pipeline or Experimental Results. -->
+<!-- Translate all headings into output_language while preserving this section order. Keep paper titles, citations, model names, author names, datasets, and metric abbreviations in original form when appropriate. Use the shared report-contract references for language consistency, math formatting, and paragraph readability. Put formulas mainly in Technical Details or Experimental Setup, and put images mainly in Architecture And Pipeline or Experimental Results. -->
 
 # Paper Information
 
@@ -37,6 +37,8 @@
 # Technical Details
 
 - Core modules:
+- Cause -> mechanism -> downstream effect for each major module:
+- Paragraph-level transitions between concepts:
 - Representation choices:
 - Supervision signals:
 - Training-only versus inference-time components:

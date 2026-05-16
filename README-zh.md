@@ -155,37 +155,6 @@ Use $analyze-ai-papers and summarize this paper in English:
 
 如果你希望指定输出语言，只需要在提示词中直接说明；如果没有显式指定，工作流会默认使用用户的主要语言。
 
-### 提取图表
-
-提示词示例：
-
-```text
-Use $analyze-ai-papers to extract figures and tables from this PDF and produce markdown with local image links:
-/path/to/paper.pdf
-```
-
-直接调用脚本：
-
-```bash
-python3 scripts/extract_pdf_figures.py \
-  --pdf /path/to/paper.pdf \
-  --out-dir /path/to/output_dir
-```
-
-如果你已经有 MinerU 生成的 markdown 骨架：
-
-```bash
-python3 scripts/extract_pdf_figures.py \
-  --pdf /path/to/paper.pdf \
-  --skeleton-markdown /path/to/mineru.md \
-  --out-dir /path/to/output_dir
-```
-
-输出内容：
-
-- `paper.md` 或你指定名称的 markdown 文件
-- `images/` 目录，存放提取出的 figure/table 图片
-
 ## 图表提取说明
 
 对于 born-digital PDF，当前表格提取默认采用 `pdfplumber` 生成基础候选框，再结合 `PyMuPDF` 的文本块和绘图对象做区域修正，然后执行页面区域渲染裁剪。

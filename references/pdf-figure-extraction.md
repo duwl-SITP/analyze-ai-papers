@@ -2,6 +2,8 @@
 
 Use this file only for the auxiliary visual-support branch of the skill. Read it when the user explicitly asks to extract figures or tables from a PDF, convert a paper PDF into markdown with local image files, preserve captions, preserve section hierarchy, or when visual artifacts are necessary to help explain architectures, modules, pipeline flow, qualitative examples, or key tables.
 
+When this branch writes files to disk, treat the method-named artifact folder as the canonical workspace for the run. Keep all extracted markdown, `images/`, and other generated extraction artifacts inside that folder, and reuse the exact same canonical folder name across preparatory and final outputs.
+
 ## Goals
 
 The extraction workflow should:
@@ -54,14 +56,20 @@ Use `scripts/extract_pdf_figures.py` for the actual extraction work.
 Inputs:
 
 - `--pdf <path>`: source PDF
-- `--out-dir <path>`: output directory
-- `--markdown-name <name>`: output markdown filename, default `paper.md`
+- `--out-dir <path>`: parent output directory under which the script creates one method-named artifact folder
+- `--method-name <name>`: optional method or model name used as the final artifact-folder name without lowercasing or slugification; if omitted, fall back to the PDF filename stem
+- `--markdown-name <name>`: output markdown filename only, default `paper.md`; path components are not allowed
 - `--skeleton-markdown <path>`: optional markdown skeleton, usually from MinerU
+- `--force-regenerate`: remove previously generated extraction outputs for this method folder before writing new ones
 
-Outputs under `--out-dir`:
+Outputs under `<out-dir>/<method-folder>`:
 
 - `<markdown-name>`: markdown with inserted relative image links
 - `images/`: extracted figure/table crops
+
+The method folder is the single landing place for intermediate extraction artifacts and final extraction outputs. If the user asks to regenerate, rerun extraction from the source PDF and do not reuse previously generated markdown or images as inputs. A fresh regenerate run should clear the existing generated markdown files in that method folder before writing the new output.
+
+The script treats `--method-name` as the canonical folder name for the run. It does not lowercase or restyle that name. If a conflicting sibling directory differs only by case, stop and resolve the naming conflict instead of generating a second folder.
 
 The script always writes markdown links relative to the markdown file, for example:
 
@@ -90,6 +98,7 @@ Use this mental model when reading or modifying the script:
 - For architecture/module questions, prefer extracting only the relevant figure or table when possible instead of converting the whole PDF to markdown.
 - Keep captions in markdown even when the image crop itself already contains some visible caption text.
 - When a caption cannot be matched into a provided skeleton markdown, append the extracted asset with its caption near the end rather than dropping it silently.
+- If the user asks to regenerate or re-extract, remove the previous generated extraction outputs for that method folder before writing new ones.
 - For scanned PDFs, be explicit that section hierarchy preservation depends on the OCR/text backbone. MinerU is the preferred path here.
 - For tables in born-digital PDFs, prefer `pdfplumber` base proposals plus `PyMuPDF` text/drawing refinement.
 - Prefer shrinking oversized table regions to table-content bounds over broad outward expansion.
@@ -104,7 +113,8 @@ Born-digital PDF:
 ```bash
 python scripts/extract_pdf_figures.py \
   --pdf input/paper.pdf \
-  --out-dir output/paper_extract
+  --out-dir output \
+  --method-name detr
 ```
 
 MinerU-backed scanned PDF workflow:
@@ -113,7 +123,9 @@ MinerU-backed scanned PDF workflow:
 python scripts/extract_pdf_figures.py \
   --pdf input/scanned-paper.pdf \
   --skeleton-markdown output/mineru/paper.md \
-  --out-dir output/scanned_paper_extract
+  --out-dir output \
+  --method-name mineru-layoutlmv3 \
+  --force-regenerate
 ```
 
 ## Reporting expectations
@@ -121,8 +133,10 @@ python scripts/extract_pdf_figures.py \
 When you use this workflow in a user-facing task, report:
 
 - whether the markdown came from a MinerU skeleton or was generated directly from the PDF
+- which method-named folder was used for this run
 - where the output markdown was saved
 - where the `images/` directory was saved
 - how many figure/table assets were extracted
 - why visual extraction was needed for the user's question
+- whether this was a fresh regenerate run
 - any obvious failure modes, such as unmatched captions or sparse text in a scanned PDF without OCR

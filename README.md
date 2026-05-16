@@ -152,37 +152,6 @@ The workflow typically produces a structured markdown report covering:
 
 If you want a specific output language, simply state it in the prompt. Otherwise, the workflow defaults to the user's primary language.
 
-### Extract figures and tables
-
-Prompt example:
-
-```text
-Use $analyze-ai-papers to extract figures and tables from this PDF and produce markdown with local image links:
-/path/to/paper.pdf
-```
-
-Direct script usage:
-
-```bash
-python3 scripts/extract_pdf_figures.py \
-  --pdf /path/to/paper.pdf \
-  --out-dir /path/to/output_dir
-```
-
-With an existing MinerU skeleton:
-
-```bash
-python3 scripts/extract_pdf_figures.py \
-  --pdf /path/to/paper.pdf \
-  --skeleton-markdown /path/to/mineru.md \
-  --out-dir /path/to/output_dir
-```
-
-Outputs:
-
-- `paper.md` or a custom markdown filename
-- `images/` containing extracted figure/table crops
-
 ## Extraction Overview
 
 For born-digital PDFs, table extraction currently uses `pdfplumber` for base table proposals and `PyMuPDF` for text/drawing-based region refinement before rendered-page cropping.

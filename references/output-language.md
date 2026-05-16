@@ -2,6 +2,8 @@
 
 Use this file whenever the skill will generate a report, explanation, method analysis, experiment summary, citation analysis, strengths/weaknesses section, research insights, or future directions.
 
+This file is the canonical source of truth for output-language policy in the final analytical report. Other skill files may summarize this policy briefly, but they should not redefine it in detail.
+
 ## First-class parameter
 
 Treat `output_language` as a first-class input parameter.
@@ -46,13 +48,15 @@ Preserve these in original form unless the user explicitly asks otherwise:
 - author names
 - model names
 - dataset and benchmark names
-- code identifiers, equations, and metric abbreviations
+- code identifiers and metric abbreviations
 
 Examples:
 
 - keep `CLIP`, `GPT-4o`, `ImageNet`, `COCO`, `mAP`, `IoU`, and author names unchanged
 - keep paper titles in original language/script
 - translate the surrounding explanation into `output_language`
+
+For equations, preserve the mathematical meaning and symbol choices from the paper, but follow [math-markdown.md](math-markdown.md) for the actual rendering and normalization rules.
 
 ## Markdown structure
 
@@ -87,6 +91,7 @@ Only the heading text changes with `output_language`; the section ordering shoul
 - Prefer terminology that researchers in the target language would actually use.
 - Leave specialized English terms unchanged when translation would be awkward, ambiguous, or less standard.
 - Do not over-translate citation strings or reference entries in ways that distort the original source information.
+- Do not translate variable names, operator names, or equation content inside math spans unless the paper itself does so.
 
 ## PDF extraction boundary
 
