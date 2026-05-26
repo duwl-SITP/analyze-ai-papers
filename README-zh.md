@@ -112,8 +112,15 @@ Claude 侧入口文件：
 如果你需要使用 PDF 图表提取或 PDF 转 markdown，请安装：
 
 ```bash
-python3 -m pip install pymupdf pdfplumber
+python3 -m pip install -r requirements.txt
 ```
+
+当前 `requirements.txt` 记录的是这个 skill 在本地 conda 环境中实际使用的最小提取依赖版本：
+
+- `pymupdf==1.27.2.3`
+- `pdfplumber==0.11.9`
+
+`scripts/extract_pdf_figures.py` 中的图像裁剪依赖 `PyMuPDF` 和 `pdfplumber`。如果缺少这两个包，提取脚本将无法完成 caption 检测、可视区域收集以及 figure/table 裁剪渲染。
 
 可选：
 

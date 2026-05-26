@@ -1,0 +1,4 @@
+# Minimal dependencies for PDF figure/table extraction and image cropping.
+# Versions are taken from the current conda environment used for this skill.
+pymupdf==1.27.2.3
+pdfplumber==0.11.9

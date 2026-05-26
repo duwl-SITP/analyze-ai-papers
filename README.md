@@ -109,8 +109,15 @@ The core shared files used by this repository are:
 Paper analysis itself does not require the extraction script. If you want PDF figure/table extraction or PDF-to-markdown support, install:
 
 ```bash
-python3 -m pip install pymupdf pdfplumber
+python3 -m pip install -r requirements.txt
 ```
+
+`requirements.txt` currently contains the minimal extraction dependencies from the working conda environment:
+
+- `pymupdf==1.27.2.3`
+- `pdfplumber==0.11.9`
+
+Figure cropping in `scripts/extract_pdf_figures.py` depends on both `PyMuPDF` and `pdfplumber`. If these packages are missing, the extraction script cannot detect captions, collect visual regions, or render cropped figure/table images.
 
 Optional:
 
