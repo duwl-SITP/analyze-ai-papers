@@ -61,6 +61,7 @@ For `Technical Details`, explain each key component with explicit before-and-aft
 - What mechanism, representation change, or objective does the paper introduce?
 - What downstream behavior, constraint, or empirical effect is this supposed to cause?
 - Which later stage of the pipeline depends on this change?
+- When the paper has multiple core innovations, is `Technical Details` split into small subsections so each innovation is explained separately?
 - Does each paragraph avoid abrupt concept jumps by explaining the source and role of every newly introduced prompt, module, loss, variable, constraint, or representation?
 - If a paragraph moves from concept A to concept B, does it include a sentence explaining why B is the next step for solving or constraining A?
 
@@ -205,6 +206,7 @@ Before finishing, check that the report:
 - names important limitations
 - avoids generic praise
 - avoids abrupt concept jumps inside paragraphs
+- uses innovation-based subsections inside `Technical Details` when the paper presents multiple distinct core ideas
 - explains the source, relationship, and role the first time each important formula, prompt, loss, module, variable, or constraint appears
 - rewrites bare math-like fragments into `$...$` or `$$...$$` before finalizing
 - does not leave unwrapped TeX commands, `_` or `^` expressions, or arrow notation in plain prose

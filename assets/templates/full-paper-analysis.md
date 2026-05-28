@@ -34,16 +34,6 @@
 
 - End-to-end pipeline in 3-5 sentences:
 
-# Technical Details
-
-- Core modules:
-- Cause -> mechanism -> downstream effect for each major module:
-- Paragraph-level transitions between concepts:
-- Representation choices:
-- Supervision signals:
-- Training-only versus inference-time components:
-- Key equations or scoring rules:
-
 # Architecture And Pipeline
 
 1. Input processing:
@@ -52,6 +42,17 @@
 4. Prediction head or generation path:
 5. Inference flow:
 6. Relevant figures or visual evidence to reference:
+
+# Technical Details
+
+- Innovation-based subsections for core ideas:
+- Core modules:
+- Cause -> mechanism -> downstream effect for each major module:
+- Paragraph-level transitions between concepts:
+- Representation choices:
+- Supervision signals:
+- Training-only versus inference-time components:
+- Key equations or scoring rules:
 
 # Experimental Setup
 

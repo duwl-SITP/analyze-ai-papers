@@ -26,6 +26,15 @@ Within a technical paragraph, prefer this order:
 
 This order is especially important in `Technical Details`, `Architecture And Pipeline`, and `Experimental Setup`, where dense method descriptions often introduce representations, prompts, losses, and constraints close together.
 
+## Innovation-Based Subsections
+
+In `Technical Details`, organize the explanation by the paper's main innovations rather than leaving all mechanism details in one undifferentiated block.
+
+- If the method has several distinct innovations, create a small subsection for each innovation.
+- Each subsection should explain one innovation's motivation, mechanism, and downstream effect chain before moving to the next one.
+- When a later innovation depends on an earlier one, make that dependency explicit at the subsection boundary.
+- Do not split into artificial subsections when the paper really contains only one central idea; the rule is to mirror the method's real innovation structure, not to force decoration.
+
 ## Abrupt Concept Jumps To Avoid
 
 - Do not jump from input decomposition directly to a prompt constraint unless the text first explains how the prompt acts on the input, feature representation, causal part, or spurious part.

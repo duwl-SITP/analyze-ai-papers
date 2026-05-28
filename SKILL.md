@@ -113,6 +113,7 @@ If the paper uses unusual section names, map them to these functional roles inst
 - Default to detailed technical explanation rather than high-level prose. Expand the actual data flow, module interactions, tensor/representation transitions, supervision path, and inference path.
 - Name the modules, information flow, representations, and supervision signals.
 - Explain why each major component exists, not just what it is called.
+- Organize `Technical Details` into small subsections grouped by the paper's main innovations. Do not write this section as one flat block when the method introduces several distinct ideas.
 - In `Technical Details`, follow [references/report-readability.md](references/report-readability.md) for paragraph-level transitions and [references/analysis-rubric.md](references/analysis-rubric.md) for cause -> mechanism -> downstream effect expectations.
 - Include key equations when they are central to the method, loss design, matching rule, optimization target, or inference score computation.
 - Follow [references/math-markdown.md](references/math-markdown.md) for equation and symbol formatting.
@@ -170,6 +171,7 @@ If the paper uses unusual section names, map them to these functional roles inst
 - If the task writes files to disk, save the final report inside the same method-named artifact folder that contains the intermediate extraction outputs.
 - Include formulas and images when they materially improve comprehension of the method, objective, architecture, or experimental evidence.
 - Place formulas primarily in `Technical Details` and `Experimental Setup`. Place figures or image references primarily in `Architecture And Pipeline` and `Experimental Results`.
+- In `Technical Details`, use innovation-based subheadings when the paper has multiple core ideas, and let each subsection cover one innovation's motivation, mechanism, and effect chain.
 - If you used the visual branch, mention that explicitly and report what was extracted and why it was needed for the explanation.
 - End with a one-sentence summary that captures problem, method, and main takeaway.
 
@@ -227,8 +229,8 @@ Unless the user asks for a smaller format, include these sections:
 - Core Problem
 - Main Contributions
 - Method Overview
-- Technical Details
 - Architecture And Pipeline
+- Technical Details
 - Experimental Setup
 - Experimental Results
 - Ablation Studies

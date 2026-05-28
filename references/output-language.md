@@ -70,8 +70,8 @@ For example, the canonical order is still:
 4. Core Problem
 5. Main Contributions
 6. Method Overview
-7. Technical Details
-8. Architecture And Pipeline
+7. Architecture And Pipeline
+8. Technical Details
 9. Experimental Setup
 10. Experimental Results
 11. Ablation Studies
