@@ -33,6 +33,7 @@ SUBPLOT_LABEL_RE = re.compile(
     r"^\s*(?:\((?P<label_paren>[A-Za-z])\)|(?P<label_plain>[A-Za-z])\))\s*(?P<rest>.*\S)?\s*$",
     re.IGNORECASE,
 )
+SUBFIGURE_CAPTION_RE = re.compile(r"^\s*\([A-Za-z]\)\s+\S")
 HEADING_RE = re.compile(r"^(?P<num>\d+(?:\.\d+)*)\s+\S")
 KNOWN_SECTION_TITLES = {
     "abstract",
@@ -1358,10 +1359,37 @@ def figure_boxes_are_neighbors(
 
     same_row = horizontal_gap(a, b) <= horizontal_gap_tol and vertical_alignment_delta(a, b) <= align_tol
     same_column = vertical_gap(a, b) <= vertical_gap_tol and edge_alignment_delta(a, b) <= align_tol
+    side_panel = horizontal_gap(a, b) <= horizontal_gap_tol and vertical_overlap(a, b) >= 0.55
     compact_overlap = boxes_close(a, b, gap=min(horizontal_gap_tol, vertical_gap_tol) * 0.5) and (
         horizontal_overlap(a, b) >= 0.35 or vertical_overlap(a, b) >= 0.35
     )
-    return same_row or same_column or compact_overlap
+    return same_row or same_column or side_panel or compact_overlap
+
+
+def has_aligned_small_panel_companion(
+    box: tuple[float, float, float, float],
+    boxes: Sequence[tuple[float, float, float, float]],
+    seed_box: tuple[float, float, float, float],
+    page_width: float,
+    page_height: float,
+) -> bool:
+    if horizontal_gap(box, seed_box) > max(24.0, page_width * 0.08):
+        return False
+    if vertical_overlap(box, seed_box) < 0.45:
+        return False
+
+    max_vertical_gap = max(28.0, page_height * 0.05)
+    align_tol = max(14.0, page_width * 0.025)
+    for other in boxes:
+        if other == box or other == seed_box:
+            continue
+        if horizontal_gap(other, seed_box) > max(24.0, page_width * 0.08):
+            continue
+        if vertical_overlap(other, seed_box) < 0.2:
+            continue
+        if vertical_gap(box, other) <= max_vertical_gap and edge_alignment_delta(box, other) <= align_tol:
+            return True
+    return False
 
 
 def has_text_barrier_between_boxes(
@@ -1433,6 +1461,131 @@ def count_subplot_labels_near_boxes(
     return labels
 
 
+def looks_figure_support_text(block: TextBlock, page_width: float, body_size: float) -> bool:
+    text = block.text.strip()
+    if not text or CAPTION_RE.match(text) or looks_subplot_label(text):
+        return False
+    normalized = normalize_text(text)
+    if normalized in KNOWN_SECTION_TITLES or HEADING_RE.match(text):
+        return False
+    words = text.split()
+    if len(words) <= 8 and box_width(block.bbox) <= page_width * 0.24:
+        return True
+    if looks_running_text_block(block, page_width=page_width, body_size=body_size):
+        return False
+    return box_width(block.bbox) <= page_width * 0.18
+
+
+def has_context_figure_box_companion(
+    box: tuple[float, float, float, float],
+    boxes: Sequence[tuple[float, float, float, float]],
+    seed_box: tuple[float, float, float, float],
+    page_width: float,
+    page_height: float,
+) -> bool:
+    if has_aligned_small_panel_companion(
+        box=box,
+        boxes=boxes,
+        seed_box=seed_box,
+        page_width=page_width,
+        page_height=page_height,
+    ):
+        return True
+
+    max_vertical_gap = max(28.0, page_height * 0.055)
+    align_tol = max(14.0, page_width * 0.025)
+    for other in boxes:
+        if other == box or other == seed_box:
+            continue
+        if vertical_gap(box, other) <= max_vertical_gap and edge_alignment_delta(box, other) <= align_tol:
+            return True
+    return False
+
+
+def expand_figure_region_from_caption_context(
+    region: tuple[float, float, float, float],
+    caption: CaptionCandidate,
+    figure_boxes: Sequence[tuple[float, float, float, float]],
+    page_blocks: Sequence[TextBlock],
+    page_width: float,
+    page_height: float,
+    direction: str,
+    max_primary_distance: float,
+    layout: PageLayout | None = None,
+) -> tuple[float, float, float, float]:
+    caption_box = caption.bbox
+    horizontal_envelope = caption_horizontal_envelope(
+        caption_box=caption_box,
+        layout=layout,
+        page_width=page_width,
+    )
+    envelope_overflow_tolerance = figure_envelope_overflow_tolerance(layout, page_width)
+    body_size = body_font_size(page_blocks)
+    expansion_limit = min(max_primary_distance, max(120.0, page_height * 0.23))
+
+    def in_caption_direction(box: tuple[float, float, float, float]) -> bool:
+        if direction == "above":
+            if box[1] < caption_box[1] - max_primary_distance or box[3] > caption_box[1] + 4.0:
+                return False
+            if box[1] < region[1] - expansion_limit and vertical_gap(box, region) > max(24.0, page_height * 0.035):
+                return False
+            return True
+        if box[3] > caption_box[3] + max_primary_distance or box[1] < caption_box[3] - 4.0:
+            return False
+        if box[3] > region[3] + expansion_limit and vertical_gap(box, region) > max(24.0, page_height * 0.035):
+            return False
+        return True
+
+    def horizontally_relevant(box: tuple[float, float, float, float]) -> bool:
+        if not box_fits_horizontal_envelope(
+            box,
+            horizontal_envelope,
+            page_width,
+            overflow_tolerance=envelope_overflow_tolerance,
+        ):
+            return False
+        return (
+            horizontal_overlap(box, region) >= 0.04
+            or horizontal_overlap(box, caption_box) >= 0.04
+            or horizontal_gap(box, region) <= max(20.0, page_width * 0.035)
+        )
+
+    support_boxes = [region]
+    for box in figure_boxes:
+        if box == region:
+            continue
+        is_small_box = rect_area(box) < max(350.0, rect_area(region) * 0.18) and (
+            box_width(box) < box_width(region) * 0.45
+            or box_height(box) < box_height(region) * 0.45
+        )
+        if is_small_box and not has_context_figure_box_companion(
+            box=box,
+            boxes=figure_boxes,
+            seed_box=region,
+            page_width=page_width,
+            page_height=page_height,
+        ):
+            continue
+        if in_caption_direction(box) and horizontally_relevant(box):
+            support_boxes.append(box)
+
+    for block in page_blocks:
+        if block_key(block) in caption_block_keys(caption):
+            continue
+        if not looks_figure_support_text(block, page_width=page_width, body_size=body_size):
+            continue
+        if in_caption_direction(block.bbox) and horizontally_relevant(block.bbox):
+            support_boxes.append(block.bbox)
+
+    if len(support_boxes) == 1:
+        return region
+
+    expanded = union_boxes(support_boxes)
+    if box_height(expanded) > max(box_height(region) * 2.6, page_height * 0.42):
+        return region
+    return expanded
+
+
 def group_figure_boxes_for_caption(
     caption: CaptionCandidate,
     figure_boxes: Sequence[tuple[float, float, float, float]],
@@ -1473,10 +1626,17 @@ def group_figure_boxes_for_caption(
     while changed:
         changed = False
         for box in list(candidate_boxes):
+            has_companion = has_aligned_small_panel_companion(
+                box=box,
+                boxes=figure_boxes,
+                seed_box=seed_box,
+                page_width=page_width,
+                page_height=page_height,
+            )
             if rect_area(box) < max(350.0, seed_area * 0.18) and (
                 box_width(box) < box_width(seed_box) * 0.45
                 or box_height(box) < box_height(seed_box) * 0.45
-            ):
+            ) and not has_companion:
                 continue
 
             if horizontal_overlap(box, caption_box) < 0.03 and abs(center_x(box) - center_x(current_union)) > max(
@@ -1775,6 +1935,8 @@ def refine_figure_region(
             continue
         if block_key(block) in caption_keys or CAPTION_RE.match(block.text):
             continue
+        if looks_figure_support_text(block, page_width=page_width, body_size=body_size):
+            continue
         if horizontal_overlap(block.bbox, current) < 0.45:
             continue
         if block.bbox[1] <= top_boundary <= block.bbox[3]:
@@ -1794,6 +1956,8 @@ def refine_figure_region(
         changed = False
         for block in sorted(page_blocks, key=lambda item: (item.bbox[1], item.bbox[0])):
             if block_key(block) in caption_keys or CAPTION_RE.match(block.text):
+                continue
+            if looks_figure_support_text(block, page_width=page_width, body_size=body_size):
                 continue
             if horizontal_overlap(block.bbox, current) < 0.45:
                 continue
@@ -1953,6 +2117,17 @@ def choose_region(
             max_primary_distance=max_primary_distance,
             layout=layout,
         )
+        region = expand_figure_region_from_caption_context(
+            region=region,
+            caption=caption,
+            figure_boxes=primary,
+            page_blocks=page_blocks,
+            page_width=page_width,
+            page_height=page_height,
+            direction=best_direction,
+            max_primary_distance=max_primary_distance,
+            layout=layout,
+        )
         horizontal_envelope = caption_horizontal_envelope(
             caption_box=caption_box,
             layout=layout,
@@ -2063,6 +2238,33 @@ def trim_box_to_rendered_content(
     if box_width(trimmed) < 12.0 or box_height(trimmed) < 12.0:
         return box
     return trimmed
+
+
+def preserve_subfigure_caption_band(
+    clipped: tuple[float, float, float, float],
+    caption: CaptionCandidate,
+    page_blocks: Sequence[TextBlock],
+    pad: float = 4.0,
+) -> tuple[float, float, float, float]:
+    label_bottom = None
+    for block in page_blocks:
+        if not SUBFIGURE_CAPTION_RE.match(block.text.strip()):
+            continue
+        if block.bbox[1] < clipped[1] - 2.0:
+            continue
+        if block.bbox[3] > caption.bbox[1] + 1.0:
+            continue
+        if horizontal_overlap(block.bbox, clipped) < 0.05:
+            continue
+        label_bottom = block.bbox[3] if label_bottom is None else max(label_bottom, block.bbox[3])
+
+    if label_bottom is None:
+        return clipped
+
+    expanded_bottom = min(caption.bbox[1] - 0.5, label_bottom + pad)
+    if expanded_bottom <= clipped[3]:
+        return clipped
+    return (clipped[0], clipped[1], clipped[2], expanded_bottom)
 
 
 def filename_slug(label: str, fallback_kind: str) -> str:
@@ -2203,6 +2405,12 @@ def extract_assets(
                     pad=max(2.0, margin / 3.0),
                 )
                 clipped = trim_box_to_rendered_content(page, clipped, dpi=dpi)
+                if caption.kind == "figure":
+                    clipped = preserve_subfigure_caption_band(
+                        clipped=clipped,
+                        caption=caption,
+                        page_blocks=page_blocks,
+                    )
                 stem = filename_slug(caption.label, caption.kind)
                 filename = f"page-{page_index + 1:03d}-{stem}.png"
                 image_path = images_dir / filename
